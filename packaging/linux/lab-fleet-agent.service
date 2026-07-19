@@ -1,0 +1,34 @@
+[Unit]
+Description=Lab Fleet background agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=labfleet
+Group=labfleet
+Environment=LAB_FLEET_STATE_DIR=/var/lib/lab-fleet
+Environment=LAB_FLEET_IPC_PATH=/run/lab-fleet/agent.sock
+ExecStart=/opt/Lab Fleet/resources/agent/lab-fleet-agent
+Restart=always
+RestartSec=3
+RuntimeDirectory=lab-fleet
+RuntimeDirectoryMode=0770
+StateDirectory=lab-fleet
+StateDirectoryMode=0700
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+ReadWritePaths=/var/lib/lab-fleet /run/lab-fleet
+
+[Install]
+WantedBy=multi-user.target
+

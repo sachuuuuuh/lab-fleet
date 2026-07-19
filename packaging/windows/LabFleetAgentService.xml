@@ -1,0 +1,14 @@
+<service>
+  <id>LabFleetAgent</id>
+  <name>Lab Fleet Agent</name>
+  <description>Maintains secure Lab Fleet discovery, enrollment, and presence.</description>
+  <executable>%BASE%\lab-fleet-agent.exe</executable>
+  <startmode>Automatic</startmode>
+  <onfailure action="restart" delay="3 sec" />
+  <resetfailure>1 hour</resetfailure>
+  <log mode="roll-by-size">
+    <sizeThreshold>10240</sizeThreshold>
+    <keepFiles>4</keepFiles>
+  </log>
+</service>
+

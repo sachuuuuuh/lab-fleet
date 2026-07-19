@@ -1,0 +1,56 @@
+name: Build installers
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  ubuntu-deb:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.0
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run package:linux
+      - name: Inspect package
+        run: dpkg-deb --info release/desktop/*.deb
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lab-fleet-ubuntu-amd64
+          path: release/desktop/*.deb
+          if-no-files-found: error
+
+  windows-msi:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.0
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run package:windows:app
+      - name: Prepare service wrapper
+        shell: powershell
+        run: .\scripts\prepare-windows-agent.ps1
+      - name: Prepare WiX
+        shell: powershell
+        run: .\scripts\prepare-wix.ps1
+      - name: Build MSI
+        shell: powershell
+        run: .\scripts\build-windows-msi.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lab-fleet-windows-x64
+          path: release/*.msi
+          if-no-files-found: error

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension" xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension">
+  <Product Id="*" Name="Lab Fleet" Language="1033" Version="$(var.ProductVersion)" Manufacturer="Lab Fleet" UpgradeCode="6D9CC4D4-932A-4A7E-9D1B-4E3CE8E91419">
+    <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" Platform="x64" />
+    <MajorUpgrade DowngradeErrorMessage="A newer version of Lab Fleet is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="INSTALLFOLDER" Name="Lab Fleet" />
+      </Directory>
+      <Directory Id="CommonAppDataFolder">
+        <Directory Id="DataFolder" Name="LabFleet">
+          <Component Id="DataDirectory" Guid="A9345E43-C931-46DC-B6BA-0AA1E6AC92D5" Permanent="yes" NeverOverwrite="yes" Win64="yes">
+            <CreateFolder>
+              <util:PermissionEx User="NT AUTHORITY\LOCAL SERVICE" GenericAll="yes" />
+            </CreateFolder>
+          </Component>
+        </Directory>
+      </Directory>
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ProgramMenuDir" Name="Lab Fleet" />
+      </Directory>
+    </Directory>
+
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Directory Id="AgentFolder" Name="agent">
+        <Component Id="AgentServiceComponent" Guid="B17B2237-0A7D-4FD5-AF31-C2A6C0F94E27" Win64="yes">
+          <File Id="AgentServiceWrapper" Source="$(var.AgentDir)\LabFleetAgentService.exe" KeyPath="yes">
+            <fire:FirewallException Id="LabFleetTcpDomain" Name="Lab Fleet host (Domain)" Port="45820" Protocol="tcp" Scope="any" Profile="domain" />
+            <fire:FirewallException Id="LabFleetTcpPrivate" Name="Lab Fleet host (Private)" Port="45820" Protocol="tcp" Scope="any" Profile="private" />
+            <fire:FirewallException Id="LabFleetMdnsDomain" Name="Lab Fleet discovery (Domain)" Port="5353" Protocol="udp" Scope="any" Profile="domain" />
+            <fire:FirewallException Id="LabFleetMdnsPrivate" Name="Lab Fleet discovery (Private)" Port="5353" Protocol="udp" Scope="any" Profile="private" />
+          </File>
+          <File Id="AgentExecutable" Source="$(var.AgentDir)\lab-fleet-agent.exe" />
+          <File Id="ControlExecutable" Source="$(var.AgentDir)\lab-fleetctl.exe" />
+          <File Id="AgentServiceConfig" Source="$(var.AgentDir)\LabFleetAgentService.xml" />
+          <ServiceInstall Id="InstallAgentService" Name="LabFleetAgent" DisplayName="Lab Fleet Agent" Description="Secure local Lab Fleet agent" Type="ownProcess" Start="auto" ErrorControl="normal" Account="NT AUTHORITY\LocalService" />
+          <ServiceControl Id="ControlAgentService" Name="LabFleetAgent" Start="install" Stop="both" Remove="uninstall" Wait="yes" />
+        </Component>
+      </Directory>
+      <Component Id="ApplicationShortcuts" Guid="*" Win64="yes">
+        <Shortcut Id="StartMenuShortcut" Directory="ProgramMenuDir" Name="Lab Fleet" Target="[INSTALLFOLDER]Lab Fleet.exe" WorkingDirectory="INSTALLFOLDER" />
+        <RemoveFolder Id="RemoveProgramMenuDir" Directory="ProgramMenuDir" On="uninstall" />
+        <RegistryValue Root="HKLM" Key="Software\LabFleet" Name="Installed" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <Feature Id="MainFeature" Title="Lab Fleet" Level="1">
+      <ComponentGroupRef Id="DesktopFiles" />
+      <ComponentRef Id="AgentServiceComponent" />
+      <ComponentRef Id="ApplicationShortcuts" />
+      <ComponentRef Id="DataDirectory" />
+    </Feature>
+  </Product>
+</Wix>
