@@ -48,6 +48,7 @@ jobs:
           test -S /run/lab-fleet/agent.sock
           node <<'NODE'
           const net = require("node:net");
+          const { randomUUID } = require("node:crypto");
           const socket = net.createConnection("/run/lab-fleet/agent.sock");
           let buffer = "";
           const fail = (error) => {
@@ -58,7 +59,7 @@ jobs:
           const timer = setTimeout(() => fail(new Error("Timed out waiting for Lab Fleet agent.")), 5000);
           socket.setEncoding("utf8");
           socket.on("connect", () => {
-            socket.write(`${JSON.stringify({ id: "ci-status", command: "getStatus" })}\n`);
+            socket.write(`${JSON.stringify({ id: randomUUID(), command: "getStatus" })}\n`);
           });
           socket.on("data", (chunk) => {
             buffer += chunk;
