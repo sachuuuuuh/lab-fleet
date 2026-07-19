@@ -23,7 +23,8 @@ jobs:
       - name: Inspect package
         run: |
           set -euo pipefail
-          deb="$(ls release/desktop/*.deb)"
+          deb="$(find "$PWD/release/desktop" -maxdepth 1 -type f -name '*.deb' -print -quit)"
+          test -n "$deb"
           dpkg-deb --info "$deb"
           dpkg-deb --contents "$deb" | grep -E 'lab-fleet-agent|lab-fleetctl|lab-fleet-agent.service'
           rm -rf /tmp/lab-fleet-deb
@@ -37,7 +38,8 @@ jobs:
       - name: Install and smoke-test service
         run: |
           set -euo pipefail
-          deb="$(ls release/desktop/*.deb)"
+          deb="$(find "$PWD/release/desktop" -maxdepth 1 -type f -name '*.deb' -print -quit)"
+          test -n "$deb"
           sudo apt-get update
           sudo apt-get install -y "$deb"
           systemctl is-active --quiet lab-fleet-agent.service
