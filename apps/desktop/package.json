@@ -1,0 +1,37 @@
+{
+  "name": "@lab-fleet/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Secure local network management for school computer labs",
+  "author": "Lab Fleet",
+  "main": "./out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "preview:renderer": "vite --host 127.0.0.1 --port 5174 --config vite.preview.config.ts",
+    "build": "electron-vite build",
+    "package:linux": "electron-builder --config electron-builder.yml --linux deb",
+    "package:windows:app": "electron-builder --config electron-builder.yml --win dir",
+    "typecheck": "tsc --noEmit",
+    "clean": "node -e \"require('fs').rmSync('out',{recursive:true,force:true})\""
+  },
+  "build": {
+    "extends": null
+  },
+  "dependencies": {
+    "@electron-toolkit/utils": "^4.0.0",
+    "@lab-fleet/agent": "*",
+    "@lab-fleet/shared": "*",
+    "lucide-react": "^0.468.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@vitejs/plugin-react": "^4.5.0",
+    "electron": "37.10.3",
+    "electron-vite": "^3.1.0",
+    "vite": "^6.3.0"
+  }
+}

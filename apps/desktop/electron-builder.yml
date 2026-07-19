@@ -1,0 +1,46 @@
+appId: com.labfleet.desktop
+productName: Lab Fleet
+artifactName: lab-fleet-${version}-${arch}.${ext}
+asar: true
+npmRebuild: false
+directories:
+  output: ../../release/desktop
+files:
+  - out/**/*
+  - package.json
+  - "!node_modules/@lab-fleet/*/src{,/**/*}"
+  - "!node_modules/@lab-fleet/*/tsconfig.json"
+extraResources:
+  - from: ../../release/agent/${os}
+    to: agent
+  - from: ../../packaging/linux/lab-fleet-agent.service
+    to: agent/lab-fleet-agent.service
+linux:
+  target:
+    - target: deb
+      arch:
+        - x64
+  category: Utility
+  executableName: lab-fleet
+  synopsis: Secure local network management for school computer labs
+  description: Lab Fleet connects school-owned Windows and Ubuntu computers into a locally managed lab group.
+  desktop:
+    entry:
+      Name: Lab Fleet
+      Comment: School computer lab network console
+      Terminal: false
+deb:
+  priority: optional
+  depends:
+    - libgtk-3-0
+    - libnotify4
+    - libnss3
+    - libxss1
+    - libxtst6
+    - xdg-utils
+  afterInstall: ../../packaging/linux/after-install.sh
+  afterRemove: ../../packaging/linux/after-remove.sh
+win:
+  target:
+    - dir
+  executableName: Lab Fleet
