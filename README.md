@@ -59,7 +59,7 @@ npm run package:windows:app
 
 The MSI is written to `release/lab-fleet-0.1.2-x64.msi`. It includes a guided install/maintenance wizard and is unsigned unless signing credentials are supplied by the release environment. Build it locally once, then copy the same MSI to every Windows x64 lab computer.
 
-Build the Ubuntu package in GitHub Actions by running the **Build Ubuntu DEB** workflow from the repository's Actions tab, or by pushing to `main` / a `v*` tag. The workflow runs on Ubuntu 22.04, builds the package natively, inspects the DEB contents, and uploads the reusable `lab-fleet-ubuntu-amd64` artifact.
+Build the Ubuntu package in GitHub Actions by running the **Build Ubuntu DEB** workflow from the repository's Actions tab. The workflow runs on Ubuntu 22.04, builds the package natively, inspects the DEB contents, installs it for a local service smoke test, and uploads only the reusable `lab-fleet-ubuntu-amd64` DEB artifact. Artifacts are retained for three days to avoid storing old release files.
 
 For maintainers on an Ubuntu build machine, the same native package command remains:
 

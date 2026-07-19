@@ -3,6 +3,10 @@ name: Build Ubuntu DEB
 on:
   workflow_dispatch:
 
+concurrency:
+  group: build-ubuntu-deb
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -15,10 +19,11 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 22
-          cache: npm
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
+      - name: Clear previous package outputs
+        run: rm -rf release/desktop release/agent
       - run: npm run package:linux
       - name: Inspect package
         run: |
@@ -81,3 +86,5 @@ jobs:
           name: lab-fleet-ubuntu-amd64
           path: release/desktop/*.deb
           if-no-files-found: error
+          retention-days: 3
+          compression-level: 0

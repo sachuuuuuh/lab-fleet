@@ -3,6 +3,10 @@ name: Verify
 on:
   workflow_dispatch:
 
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -17,7 +21,6 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 22
-          cache: npm
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
