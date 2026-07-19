@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.1 - 2026-07-19
+
+- Fixed the packaged Electron white screen by emitting a CommonJS sandbox preload.
+- Added a visible startup recovery state and local desktop lifecycle diagnostics.
+- Added a guided Windows install-directory and maintenance wizard.
+- Added Installed Apps metadata, an uninstall Start Menu shortcut, and cleaner binary removal.
+- Moved WinSW logs to the writable Lab Fleet data directory.
+- Added a Windows Docker workflow that builds one reusable Ubuntu amd64 DEB.
+- Added a packaged Windows preload/renderer smoke test.
+
 ## 0.1.0 - 2026-07-19
 
 - Added shared H-node and S-node desktop application.
@@ -10,4 +20,3 @@
 - Added local account protection and administrator reset utility.
 - Added Ubuntu systemd/DEB and Windows service/MSI packaging definitions.
 - Added automated cryptographic and mixed-platform integration tests.
-

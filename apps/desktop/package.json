@@ -1,10 +1,16 @@
 {
   "name": "@lab-fleet/desktop",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
+  "license": "MIT",
   "description": "Secure local network management for school computer labs",
-  "author": "Lab Fleet",
+  "author": {
+    "name": "Aadithyan",
+    "email": "95968127+sachuuuuuh@users.noreply.github.com"
+  },
+  "homepage": "https://github.com/sachuuuuuh/lab-fleet",
+  "desktopName": "Lab Fleet",
   "main": "./out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",

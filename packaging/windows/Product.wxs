@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension" xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension">
   <Product Id="*" Name="Lab Fleet" Language="1033" Version="$(var.ProductVersion)" Manufacturer="Lab Fleet" UpgradeCode="6D9CC4D4-932A-4A7E-9D1B-4E3CE8E91419">
-    <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" Platform="x64" />
+    <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" InstallPrivileges="elevated" Platform="x64" />
     <MajorUpgrade DowngradeErrorMessage="A newer version of Lab Fleet is already installed." />
     <MediaTemplate EmbedCab="yes" />
+
+    <Property Id="ARPCOMMENTS" Value="Secure local network enrollment for school computer labs." />
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.LicenseRtf)" />
+    <UIRef Id="WixUI_InstallDir" />
 
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="ProgramFiles64Folder">
@@ -37,11 +42,14 @@
           <File Id="AgentServiceConfig" Source="$(var.AgentDir)\LabFleetAgentService.xml" />
           <ServiceInstall Id="InstallAgentService" Name="LabFleetAgent" DisplayName="Lab Fleet Agent" Description="Secure local Lab Fleet agent" Type="ownProcess" Start="auto" ErrorControl="normal" Account="NT AUTHORITY\LocalService" />
           <ServiceControl Id="ControlAgentService" Name="LabFleetAgent" Start="install" Stop="both" Remove="uninstall" Wait="yes" />
+          <RemoveFolder Id="RemoveAgentFolder" Directory="AgentFolder" On="uninstall" />
         </Component>
       </Directory>
       <Component Id="ApplicationShortcuts" Guid="*" Win64="yes">
         <Shortcut Id="StartMenuShortcut" Directory="ProgramMenuDir" Name="Lab Fleet" Target="[INSTALLFOLDER]Lab Fleet.exe" WorkingDirectory="INSTALLFOLDER" />
+        <Shortcut Id="UninstallShortcut" Directory="ProgramMenuDir" Name="Uninstall Lab Fleet" Target="[System64Folder]msiexec.exe" Arguments="/x [ProductCode]" WorkingDirectory="INSTALLFOLDER" />
         <RemoveFolder Id="RemoveProgramMenuDir" Directory="ProgramMenuDir" On="uninstall" />
+        <RemoveFolder Id="RemoveInstallFolder" Directory="INSTALLFOLDER" On="uninstall" />
         <RegistryValue Root="HKLM" Key="Software\LabFleet" Name="Installed" Type="integer" Value="1" KeyPath="yes" />
       </Component>
     </DirectoryRef>

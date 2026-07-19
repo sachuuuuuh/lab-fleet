@@ -6,9 +6,11 @@
   <startmode>Automatic</startmode>
   <onfailure action="restart" delay="3 sec" />
   <resetfailure>1 hour</resetfailure>
+  <stoptimeout>10 sec</stoptimeout>
+  <hidewindow>true</hidewindow>
+  <logpath>%ProgramData%\LabFleet\logs</logpath>
   <log mode="roll-by-size">
     <sizeThreshold>10240</sizeThreshold>
     <keepFiles>4</keepFiles>
   </log>
 </service>
-

@@ -11,6 +11,14 @@ npm run build
 npm audit --omit=dev
 ```
 
+After building the Windows application directory, verify the actual Electron package rather than only the browser renderer:
+
+```powershell
+npm run smoke:windows-package
+```
+
+`npm run package:linux:docker` was exercised on Windows with Docker Desktop and produced `release/desktop/lab-fleet-0.1.1-amd64.deb`. Its control archive was inspected with `dpkg-deb --info` inside the Linux container. This does not replace installation and reboot testing on actual Ubuntu 22.04 and 24.04 systems.
+
 Current automated scenarios:
 
 - Password hashing accepts the correct password and rejects an incorrect password.
@@ -31,6 +39,8 @@ Windows CI must:
 4. Install the MSI on Windows 10 and Windows 11 test machines.
 5. Confirm `LabFleetAgent` starts as `LocalService`, restarts after failure, and starts after reboot.
 6. Confirm repair, upgrade, downgrade rejection, uninstall, and preserved `%ProgramData%\LabFleet` state.
+7. Confirm the setup wizard offers install-directory, progress, completion, maintenance, and removal screens.
+8. Confirm Lab Fleet is present in Windows Installed Apps and both Start Menu shortcuts work.
 
 Ubuntu CI or a clean VM must:
 
@@ -60,4 +70,3 @@ Use fictional school, administrator, and laptop names.
 14. Capture the exact package versions, test date, operating systems, and pass/fail results in `DEVELOPMENT_LOG.md`.
 
 The physical two-computer acceptance test has not yet been performed in this workspace and must not be reported as passed.
-

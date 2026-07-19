@@ -57,7 +57,7 @@ npm run package:windows:app
 ./scripts/build-windows-msi.ps1
 ```
 
-The MSI is written to `release/lab-fleet-0.1.0-x64.msi`. It is unsigned unless signing credentials are supplied by the release environment.
+The MSI is written to `release/lab-fleet-0.1.1-x64.msi`. It includes a guided install/maintenance wizard and is unsigned unless signing credentials are supplied by the release environment. Build it once, then copy the same MSI to every Windows x64 lab computer.
 
 Build the Ubuntu package on Ubuntu 22.04 or in the installer CI workflow:
 
@@ -67,20 +67,28 @@ npm run package:linux
 
 The DEB is written under `release/desktop/`.
 
+On Windows, Docker Desktop can perform the native Linux build in a Linux container. Start Docker Desktop in Linux-container mode, then run:
+
+```powershell
+npm run package:linux:docker
+```
+
+The command uses an isolated Linux `node_modules` volume and writes the resulting DEB to `release/desktop/`. Build it once, then copy that DEB to every Ubuntu amd64 lab computer; client computers do not need Node.js, npm, Docker, or the source repository.
+
 ## Installation
 
 Windows:
 
 ```powershell
-msiexec /i lab-fleet-0.1.0-x64.msi
+msiexec /i lab-fleet-0.1.1-x64.msi
 ```
 
-The per-machine MSI installs the desktop application, starts `LabFleetAgent` as an automatic `LocalService`, preserves `%ProgramData%\LabFleet` across normal uninstall, and opens only TCP 45820 and UDP 5353 on Domain and Private firewall profiles.
+The per-machine MSI provides a guided setup wizard, installs the desktop application, starts `LabFleetAgent` as an automatic `LocalService`, preserves `%ProgramData%\LabFleet` across normal uninstall, and opens only TCP 45820 and UDP 5353 on Domain and Private firewall profiles. Remove it through **Settings > Apps > Installed apps > Lab Fleet**, by opening the MSI again and choosing **Remove**, or from the **Uninstall Lab Fleet** Start Menu shortcut.
 
 Ubuntu:
 
 ```bash
-sudo apt install ./lab-fleet-0.1.0-amd64.deb
+sudo apt install ./release/desktop/lab-fleet-0.1.1-amd64.deb
 ```
 
 The package installs and starts `lab-fleet-agent.service`. Log out and back in if the installer adds the current desktop user to the `labfleet` group. When UFW blocks discovery or hosting, print the explicit rules with:
@@ -120,4 +128,3 @@ GPT-5.6 is **not integrated in Feature 1**. Lab Fleet must not be described as s
 ## License
 
 Lab Fleet is released under the [MIT License](LICENSE).
-

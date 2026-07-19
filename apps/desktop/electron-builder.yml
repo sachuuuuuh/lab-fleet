@@ -16,6 +16,7 @@ extraResources:
   - from: ../../packaging/linux/lab-fleet-agent.service
     to: agent/lab-fleet-agent.service
 linux:
+  syncDesktopName: true
   target:
     - target: deb
       arch:
@@ -30,6 +31,8 @@ linux:
       Comment: School computer lab network console
       Terminal: false
 deb:
+  packageName: lab-fleet
+  packageCategory: utils
   priority: optional
   depends:
     - libgtk-3-0
