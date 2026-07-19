@@ -31,13 +31,13 @@
     <DirectoryRef Id="INSTALLFOLDER">
       <Directory Id="AgentFolder" Name="agent">
         <Component Id="AgentServiceComponent" Guid="B17B2237-0A7D-4FD5-AF31-C2A6C0F94E27" Win64="yes">
-          <File Id="AgentServiceWrapper" Source="$(var.AgentDir)\LabFleetAgentService.exe" KeyPath="yes">
+          <File Id="AgentServiceWrapper" Source="$(var.AgentDir)\LabFleetAgentService.exe" KeyPath="yes" />
+          <File Id="AgentExecutable" Source="$(var.AgentDir)\lab-fleet-agent.exe">
             <fire:FirewallException Id="LabFleetTcpDomain" Name="Lab Fleet host (Domain)" Port="45820" Protocol="tcp" Scope="any" Profile="domain" />
             <fire:FirewallException Id="LabFleetTcpPrivate" Name="Lab Fleet host (Private)" Port="45820" Protocol="tcp" Scope="any" Profile="private" />
             <fire:FirewallException Id="LabFleetMdnsDomain" Name="Lab Fleet discovery (Domain)" Port="5353" Protocol="udp" Scope="any" Profile="domain" />
             <fire:FirewallException Id="LabFleetMdnsPrivate" Name="Lab Fleet discovery (Private)" Port="5353" Protocol="udp" Scope="any" Profile="private" />
           </File>
-          <File Id="AgentExecutable" Source="$(var.AgentDir)\lab-fleet-agent.exe" />
           <File Id="ControlExecutable" Source="$(var.AgentDir)\lab-fleetctl.exe" />
           <File Id="AgentServiceConfig" Source="$(var.AgentDir)\LabFleetAgentService.xml" />
           <ServiceInstall Id="InstallAgentService" Name="LabFleetAgent" DisplayName="Lab Fleet Agent" Description="Secure local Lab Fleet agent" Type="ownProcess" Start="auto" ErrorControl="normal" Account="NT AUTHORITY\LocalService" />

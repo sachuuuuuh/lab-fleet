@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.4 - 2026-07-19
+
+- Fixed Windows MSI firewall rules to target the actual `lab-fleet-agent.exe` listener instead of the WinSW wrapper.
+- Added defensive S-node enrollment handling for invalid, closed, or interrupted H-node connections.
+
 ## 0.1.3 - 2026-07-19
 
 - Made S-node discovery wait briefly for mDNS replies instead of returning an empty list immediately after scan starts.

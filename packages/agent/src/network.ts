@@ -423,12 +423,18 @@ export class StudentNetwork {
       let hostPublicKey = "";
       let observedFingerprint = "";
       let settled = false;
+      const finishReject = (error: Error): void => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeout);
+        reject(error);
+      };
       const socket = createPinnedSocket(advertisement.address, advertisement.port, advertisement.fingerprint, (fp) => {
         observedFingerprint = fp;
       });
       const timeout = setTimeout(() => {
         socket.terminate();
-        reject(new Error("The H-node did not respond in time."));
+        finishReject(new Error("The H-node did not respond in time."));
       }, 15_000);
       socket.on("open", () => {
         send(socket, "pair.init", {
@@ -441,7 +447,14 @@ export class StudentNetwork {
         });
       });
       socket.on("message", (raw) => {
-        const message = parseEnvelope(raw.toString());
+        let message: WireEnvelope;
+        try {
+          message = parseEnvelope(raw.toString());
+        } catch {
+          socket.close(1008, "invalid message");
+          finishReject(new Error("The H-node sent an invalid enrollment response."));
+          return;
+        }
         const payload = message.payload as Record<string, unknown>;
         if (message.type === "pair.challenge") {
           if (typeof payload.hostPublicKey !== "string" || typeof payload.nonce !== "string") return;
@@ -472,13 +485,15 @@ export class StudentNetwork {
           const reason = typeof payload.reason === "string" ? payload.reason : "Enrollment was rejected.";
           clearTimeout(timeout);
           this.callbacks.onRejected(reason);
-          if (!settled) reject(new Error(reason));
+          finishReject(new Error(reason));
           socket.close(1000, "rejected");
         }
       });
       socket.on("error", (error) => {
-        clearTimeout(timeout);
-        if (!settled) reject(error);
+        finishReject(error);
+      });
+      socket.on("close", () => {
+        finishReject(new Error("The H-node closed the enrollment connection before approval."));
       });
     });
   }
