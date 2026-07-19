@@ -38,7 +38,7 @@ export class DiscoveryService extends EventEmitter {
     this.bonjour ??= new Bonjour();
     this.browser = this.bonjour.find({ type: "labfleet", protocol: "tcp" }, (service) => {
       const address = selectAddress(service.addresses ?? []);
-      const txt = service.txt as Record<string, string> | undefined;
+      const txt = normalizeTxt(service.txt);
       if (!address || !txt) return;
       const candidate = {
         protocolVersion: Number(txt.v),
@@ -62,6 +62,19 @@ export class DiscoveryService extends EventEmitter {
     return [...this.advertisements.values()].sort((left, right) => left.labName.localeCompare(right.labName));
   }
 
+  async waitForAdvertisements(timeoutMs: number): Promise<LabAdvertisement[]> {
+    if (this.advertisements.size > 0) return this.list();
+    return await new Promise<LabAdvertisement[]>((resolve) => {
+      const done = (): void => {
+        clearTimeout(timer);
+        this.off("discovered", done);
+        resolve(this.list());
+      };
+      const timer = setTimeout(done, timeoutMs);
+      this.once("discovered", done);
+    });
+  }
+
   stop(): void {
     this.browser?.stop();
     this.browser = undefined;
@@ -77,5 +90,24 @@ export class DiscoveryService extends EventEmitter {
 }
 
 function selectAddress(addresses: string[]): string | undefined {
-  return addresses.find((address) => /^\d{1,3}(\.\d{1,3}){3}$/.test(address) && !address.startsWith("127."));
+  return addresses
+    .map((address) => address.replace(/^::ffff:/, ""))
+    .find((address) => /^\d{1,3}(\.\d{1,3}){3}$/.test(address) && !address.startsWith("127.") && !address.startsWith("169.254."));
+}
+
+function normalizeTxt(value: unknown): Record<string, string> | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  const normalized: Record<string, string> = {};
+  for (const [key, entry] of Object.entries(value as Record<string, unknown>)) {
+    if (typeof entry === "string") normalized[key] = entry;
+    else if (Buffer.isBuffer(entry)) normalized[key] = entry.toString("utf8");
+    else if (Array.isArray(entry)) {
+      const first = entry[0];
+      if (typeof first === "string") normalized[key] = first;
+      else if (Buffer.isBuffer(first)) normalized[key] = first.toString("utf8");
+    } else if (entry !== undefined && entry !== null) {
+      normalized[key] = String(entry);
+    }
+  }
+  return normalized;
 }

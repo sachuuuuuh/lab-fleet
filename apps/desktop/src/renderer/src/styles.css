@@ -82,6 +82,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgba(29, 112, 80,
 .pairing-panel { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; padding: 18px 20px; color: #17211d; background: #eef4f1; border: 1px solid #bdd5c9; border-left: 4px solid #237a59; border-radius: 6px; }
 .join-code { display: block; margin-top: 7px; font-family: "Cascadia Code", "Ubuntu Mono", monospace; font-size: 28px; letter-spacing: 2px; }
 .pairing-meta { display: flex; gap: 8px; align-items: center; color: #52635b; font-size: 12px; }
+.pairing-side { display: grid; gap: 10px; justify-items: end; }
+.address-list { display: flex; max-width: 420px; flex-wrap: wrap; gap: 7px; justify-content: flex-end; }
+.address-list code { padding: 5px 7px; color: #264239; background: white; border: 1px solid #c7d8d0; border-radius: 5px; font-family: "Cascadia Code", "Ubuntu Mono", monospace; font-size: 12px; }
 .content-section { margin-top: 28px; }
 .section-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .section-heading > div { display: flex; gap: 8px; align-items: center; }
@@ -149,6 +152,8 @@ th:last-child, td:last-child { width: 54px; text-align: right; }
   .dashboard-header .button { width: 100%; }
   .pairing-panel, .connection-hero { align-items: flex-start; }
   .pairing-panel { flex-direction: column; gap: 14px; }
+  .pairing-side { justify-items: start; }
+  .address-list { justify-content: flex-start; }
   .request-row { grid-template-columns: auto 1fr; }
   .request-row .row-actions { grid-column: 1 / -1; }
   .join-form, .manual-fields { grid-template-columns: 1fr; }

@@ -372,6 +372,8 @@ function HostDashboard(props: {
   }, [props.pairing]);
   const online = props.nodes.filter((node) => node.presence.status === "online").length;
   const pairingActive = props.pairing && Date.parse(props.pairing.expiresAt) > Date.now();
+  const addresses = props.status.networkAddresses ?? [];
+  const port = props.status.networkPort ?? 45820;
   return (
     <section className="dashboard">
       <header className="dashboard-header">
@@ -386,7 +388,14 @@ function HostDashboard(props: {
       {pairingActive && (
         <div className="pairing-panel">
           <div><span className="eyebrow">Enrollment code</span><strong className="join-code">{props.pairing!.code}</strong></div>
-          <div className="pairing-meta"><Clock3 size={17} /><span>Expires {formatTime(props.pairing!.expiresAt)}</span></div>
+          <div className="pairing-side">
+            <div className="pairing-meta"><Clock3 size={17} /><span>Expires {formatTime(props.pairing!.expiresAt)}</span></div>
+            {addresses.length > 0 && (
+              <div className="address-list">
+                {addresses.slice(0, 3).map((address) => <code key={address}>{address}:{port}</code>)}
+              </div>
+            )}
+          </div>
         </div>
       )}
       {props.pending.length > 0 && (
@@ -442,6 +451,7 @@ function StudentEnrollment({ status, labs, busy, onRefresh, onJoin }: {
   const [address, setAddress] = useState("");
   const [port, setPort] = useState("45820");
   const pending = status.phase === "student-pending";
+  const portNumber = Number(port);
   const manualLab = useMemo<LabAdvertisement>(() => ({
     protocolVersion: 1,
     hostId: "00000000-0000-4000-8000-000000000000",
@@ -449,10 +459,11 @@ function StudentEnrollment({ status, labs, busy, onRefresh, onJoin }: {
     labId: "00000000-0000-4000-8000-000000000000",
     labName: address || "H-node",
     address,
-    port: Number(port),
+    port: portNumber,
     fingerprint: "",
     discoveredAt: new Date().toISOString()
-  }), [address, port]);
+  }), [address, portNumber]);
+  const manualReady = address.trim().length > 0 && Number.isInteger(portNumber) && portNumber > 0 && portNumber <= 65_535;
 
   if (pending) {
     return <CenteredState icon={<Clock3 size={28} />} eyebrow="Enrollment pending" title="Waiting for H-node approval" subtitle="The request remains protected by the temporary enrollment session." />;
@@ -465,7 +476,7 @@ function StudentEnrollment({ status, labs, busy, onRefresh, onJoin }: {
       </header>
       {!manual && (
         <div className="lab-list">
-          {labs.length === 0 ? <EmptyState icon={<Wifi size={24} />} title="No lab groups discovered" /> : labs.map((lab) => (
+          {labs.length === 0 ? <EmptyState icon={<Wifi size={24} />} title="No lab groups discovered. Use the H-node IP address if multicast is blocked." /> : labs.map((lab) => (
             <button className={`lab-row ${selected?.hostId === lab.hostId ? "selected" : ""}`} key={lab.hostId} onClick={() => setSelected(lab)}>
               <span className="role-icon host"><Server size={21} /></span>
               <span><strong>{lab.labName}</strong><small>{lab.schoolName} · {lab.address}</small></span>
@@ -478,7 +489,7 @@ function StudentEnrollment({ status, labs, busy, onRefresh, onJoin }: {
       <button className="text-button" onClick={() => setManual((value) => !value)}>{manual ? <Wifi size={17} /> : <Link2 size={17} />}{manual ? "Use discovery" : "Connect by IP address"}</button>
       <form className="join-form" onSubmit={(event) => { event.preventDefault(); const target = manual ? manualLab : selected; if (target) void onJoin(target, code); }}>
         <Field label="Enrollment code" value={code} onChange={setCode} placeholder="ABCD-EFGH" />
-        <button className="button primary" disabled={busy || !(manual ? address : selected)}>{busy ? <LoaderCircle className="spin" size={18} /> : <Link2 size={18} />} Request to join</button>
+        <button className="button primary" disabled={busy || !(manual ? manualReady : selected)}>{busy ? <LoaderCircle className="spin" size={18} /> : <Link2 size={18} />} Request to join</button>
       </form>
     </section>
   );

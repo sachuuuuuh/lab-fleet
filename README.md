@@ -57,7 +57,7 @@ npm run package:windows:app
 ./scripts/build-windows-msi.ps1
 ```
 
-The MSI is written to `release/lab-fleet-0.1.2-x64.msi`. It includes a guided install/maintenance wizard and is unsigned unless signing credentials are supplied by the release environment. Build it locally once, then copy the same MSI to every Windows x64 lab computer.
+The MSI is written to `release/lab-fleet-0.1.3-x64.msi`. It includes a guided install/maintenance wizard and is unsigned unless signing credentials are supplied by the release environment. Build it locally once, then copy the same MSI to every Windows x64 lab computer.
 
 Build the Ubuntu package in GitHub Actions by running the **Build Ubuntu DEB** workflow from the repository's Actions tab. The workflow runs on Ubuntu 22.04, builds the package natively, inspects the DEB contents, installs it for a local service smoke test, and uploads only the reusable `lab-fleet-ubuntu-amd64` DEB artifact. Artifacts are retained for three days to avoid storing old release files.
 
@@ -74,15 +74,17 @@ The DEB is written under `release/desktop/` when built on Ubuntu. For normal dis
 Windows:
 
 ```powershell
-msiexec /i lab-fleet-0.1.2-x64.msi
+msiexec /i lab-fleet-0.1.3-x64.msi
 ```
 
 The per-machine MSI provides a guided setup wizard, installs the desktop application, starts `LabFleetAgent` as an automatic `LocalService`, preserves `%ProgramData%\LabFleet` across normal uninstall, and opens only TCP 45820 and UDP 5353 on Domain and Private firewall profiles. Remove it through **Settings > Apps > Installed apps > Lab Fleet**, by opening the MSI again and choosing **Remove**, or from the **Uninstall Lab Fleet** Start Menu shortcut.
 
+On a Windows H-node, the active network profile must be **Domain** or **Private** for those firewall rules to apply. If Windows marks the Wi-Fi as **Public**, discovery and joining may be blocked until the network profile is changed or an administrator opens the equivalent rules.
+
 Ubuntu:
 
 ```bash
-sudo apt install ./lab-fleet-0.1.2-amd64.deb
+sudo apt install ./lab-fleet-0.1.3-amd64.deb
 ```
 
 The package installs and starts `lab-fleet-agent.service`. Log out and back in if the installer adds the current desktop user to the `labfleet` group. When UFW blocks discovery or hosting, print the explicit rules with:
@@ -113,6 +115,8 @@ If the service is running but access is denied, add the desktop user to the loca
 ```bash
 sudo usermod -aG labfleet "$USER"
 ```
+
+If an S-node does not discover the H-node automatically, open enrollment on the H-node and use one of the displayed `IP:port` values with **Connect by IP address** on the S-node. This avoids multicast/mDNS restrictions on school Wi-Fi while keeping the same join-code and approval flow.
 
 ## Recovery
 

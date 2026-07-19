@@ -1,5 +1,5 @@
 export const PROTOCOL_VERSION = 1;
-export const AGENT_VERSION = "0.1.0";
+export const AGENT_VERSION = "0.1.3";
 export const NETWORK_PORT = 45_820;
 export const HEARTBEAT_INTERVAL_MS = 10_000;
 export const OFFLINE_AFTER_MS = 30_000;
@@ -126,6 +126,8 @@ export interface AgentStatus {
   laptopUsername?: string;
   membership?: Membership;
   pairingExpiresAt?: string;
+  networkAddresses?: string[];
+  networkPort?: number;
 }
 
 export interface PersistedState {
@@ -152,4 +154,3 @@ export interface AgentEvent<T = unknown> {
   event: AgentEventName;
   data: T;
 }
-

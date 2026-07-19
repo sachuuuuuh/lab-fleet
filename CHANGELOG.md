@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.3 - 2026-07-19
+
+- Made S-node discovery wait briefly for mDNS replies instead of returning an empty list immediately after scan starts.
+- Hardened mDNS parsing for TXT records and IPv4-mapped addresses seen on real networks.
+- Added H-node LAN address and port display during enrollment so S-nodes can use manual IP joining when multicast is blocked.
+- Clarified the S-node empty discovery state and manual IP fallback.
+
 ## 0.1.2 - 2026-07-19
 
 - Fixed the Ubuntu agent service so the quoted Node SEA executable can start and create `/run/lab-fleet/agent.sock`.

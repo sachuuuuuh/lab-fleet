@@ -1,6 +1,6 @@
 {
   "name": "lab-fleet",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": true,
   "description": "Cross-platform local network management for school computer labs",
   "license": "MIT",

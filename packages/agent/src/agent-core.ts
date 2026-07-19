@@ -1,4 +1,5 @@
 import { EventEmitter } from "node:events";
+import os from "node:os";
 import { randomBytes, randomUUID } from "node:crypto";
 import {
   AGENT_VERSION,
@@ -87,7 +88,7 @@ export class AgentCore extends EventEmitter {
       case "discoverLabs":
         this.ensureStudent();
         this.discovery.browse();
-        return this.discovery.list();
+        return await this.discovery.waitForAdvertisements(1_500);
       case "startPairing":
         this.requireSession(input.sessionToken);
         return this.startPairing();
@@ -145,6 +146,10 @@ export class AgentCore extends EventEmitter {
     if (this.state.membership) base.membership = this.state.membership;
     if (this.pairingExpiresAt && this.pairingExpiresAt > Date.now()) {
       base.pairingExpiresAt = new Date(this.pairingExpiresAt).toISOString();
+    }
+    if (this.state.role === "host" && this.state.host?.labId) {
+      base.networkAddresses = localNetworkAddresses();
+      base.networkPort = this.hostNetwork?.port ?? this.port;
     }
     return base;
   }
@@ -388,4 +393,15 @@ export class AgentCore extends EventEmitter {
   private emitAgent(event: AgentEvent["event"], data: unknown): void {
     this.emit("agentEvent", { event, data } satisfies AgentEvent);
   }
+}
+
+function localNetworkAddresses(): string[] {
+  const addresses = new Set<string>();
+  for (const entries of Object.values(os.networkInterfaces())) {
+    for (const entry of entries ?? []) {
+      if (entry.internal) continue;
+      if (entry.family === "IPv4") addresses.add(entry.address);
+    }
+  }
+  return [...addresses].sort();
 }
