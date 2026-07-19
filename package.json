@@ -1,0 +1,37 @@
+{
+  "name": "lab-fleet",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cross-platform local network management for school computer labs",
+  "license": "MIT",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @lab-fleet/shared && npm run build -w @lab-fleet/agent && npm run build -w @lab-fleet/desktop",
+    "build:agent-binaries": "node scripts/build-agent-sea.mjs",
+    "package:linux": "npm run build && npm run build:agent-binaries && npm run package:linux -w @lab-fleet/desktop",
+    "package:windows:app": "npm run build && npm run build:agent-binaries && npm run package:windows:app -w @lab-fleet/desktop",
+    "dev": "npm run build -w @lab-fleet/shared && concurrently -k -n agent,desktop -c cyan,green \"npm run dev -w @lab-fleet/agent\" \"npm run dev -w @lab-fleet/desktop\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "clean": "npm run clean --workspaces --if-present"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "concurrently": "^9.2.0",
+    "cross-env": "^10.0.0",
+    "electron-builder": "^26.0.0",
+    "esbuild": "^0.25.0",
+    "postject": "^1.0.0-alpha.6",
+    "tsx": "^4.20.0",
+    "tsup": "^8.5.0",
+    "typescript": "^5.8.0",
+    "vitest": "^3.2.0"
+  },
+  "engines": {
+    "node": ">=22.20.0"
+  }
+}
