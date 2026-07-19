@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.5 - 2026-07-19
+
+- Enabled same-version MSI upgrades for development builds so repeated local installer rebuilds replace stale file sets.
+
 ## 0.1.4 - 2026-07-19
 
 - Fixed Windows MSI firewall rules to target the actual `lab-fleet-agent.exe` listener instead of the WinSW wrapper.

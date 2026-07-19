@@ -101,6 +101,74 @@ describe("cross-platform enrollment", () => {
       })
     ).rejects.toThrow("invalid or expired");
   });
+
+  it("enrolls through manual IP entry without a pre-known certificate fingerprint", async () => {
+    const host = await createAgent("windows", "Windows 11");
+    const student = await createAgent("linux", "Ubuntu 24.04");
+    const hostRegistration = (await host.invoke("registerHost", {
+      schoolName: "Manual School",
+      adminUsername: "admin.user",
+      password: "very secure host password"
+    })) as { sessionToken: string };
+    await host.invoke("createLab", { sessionToken: hostRegistration.sessionToken, labName: "Manual Lab" });
+    const pairing = (await host.invoke("startPairing", {
+      sessionToken: hostRegistration.sessionToken
+    })) as { code: string };
+    const studentRegistration = (await student.invoke("registerNode", {
+      laptopUsername: "manual-node",
+      password: "very secure node password"
+    })) as { sessionToken: string };
+    const hostStatus = host.getStatus();
+
+    const requested = (await student.invoke("requestJoin", {
+      sessionToken: studentRegistration.sessionToken,
+      advertisement: {
+        protocolVersion: 1,
+        hostId: hostStatus.installationId,
+        schoolName: hostStatus.schoolName,
+        labId: hostStatus.labId,
+        labName: hostStatus.labName,
+        address: " 127.0.0.1 ",
+        port: host.networkPort,
+        fingerprint: "",
+        discoveredAt: new Date().toISOString()
+      },
+      code: pairing.code
+    })) as { requestId: string };
+    await host.invoke("approveJoin", {
+      sessionToken: hostRegistration.sessionToken,
+      requestId: requested.requestId
+    });
+
+    await waitFor(() => student.getStatus().phase === "student-connected");
+    expect(student.getStatus().membership?.hostFingerprint).toMatch(/^[a-f0-9]{64}$/);
+  });
+
+  it("rejects incompatible join target protocol versions before connecting", async () => {
+    const student = await createAgent("linux", "Ubuntu 22.04");
+    const studentRegistration = (await student.invoke("registerNode", {
+      laptopUsername: "future-node",
+      password: "very secure node password"
+    })) as { sessionToken: string };
+
+    await expect(
+      student.invoke("requestJoin", {
+        sessionToken: studentRegistration.sessionToken,
+        advertisement: {
+          protocolVersion: 2,
+          hostId: "00000000-0000-4000-8000-000000000000",
+          schoolName: "Future School",
+          labId: "00000000-0000-4000-8000-000000000000",
+          labName: "Future Lab",
+          address: "127.0.0.1",
+          port: 45820,
+          fingerprint: "",
+          discoveredAt: new Date().toISOString()
+        } satisfies LabAdvertisement,
+        code: "ABCD-EFGH"
+      })
+    ).rejects.toThrow("incompatible");
+  });
 });
 
 async function createAgent(platformName: "linux" | "windows", osVersion: string): Promise<AgentCore> {

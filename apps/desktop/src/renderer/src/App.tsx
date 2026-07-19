@@ -452,18 +452,19 @@ function StudentEnrollment({ status, labs, busy, onRefresh, onJoin }: {
   const [port, setPort] = useState("45820");
   const pending = status.phase === "student-pending";
   const portNumber = Number(port);
+  const manualAddress = address.trim();
   const manualLab = useMemo<LabAdvertisement>(() => ({
     protocolVersion: 1,
     hostId: "00000000-0000-4000-8000-000000000000",
     schoolName: "Manual connection",
     labId: "00000000-0000-4000-8000-000000000000",
-    labName: address || "H-node",
-    address,
+    labName: manualAddress || "H-node",
+    address: manualAddress,
     port: portNumber,
     fingerprint: "",
     discoveredAt: new Date().toISOString()
-  }), [address, portNumber]);
-  const manualReady = address.trim().length > 0 && Number.isInteger(portNumber) && portNumber > 0 && portNumber <= 65_535;
+  }), [manualAddress, portNumber]);
+  const manualReady = manualAddress.length > 0 && Number.isInteger(portNumber) && portNumber > 0 && portNumber <= 65_535;
 
   if (pending) {
     return <CenteredState icon={<Clock3 size={28} />} eyebrow="Enrollment pending" title="Waiting for H-node approval" subtitle="The request remains protected by the temporary enrollment session." />;

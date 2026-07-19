@@ -58,6 +58,13 @@ export class DiscoveryService extends EventEmitter {
     });
   }
 
+  async scan(timeoutMs: number): Promise<LabAdvertisement[]> {
+    this.advertisements.clear();
+    this.stopBrowser();
+    this.browse();
+    return await this.waitForAdvertisements(timeoutMs);
+  }
+
   list(): LabAdvertisement[] {
     return [...this.advertisements.values()].sort((left, right) => left.labName.localeCompare(right.labName));
   }
@@ -76,11 +83,15 @@ export class DiscoveryService extends EventEmitter {
   }
 
   stop(): void {
-    this.browser?.stop();
-    this.browser = undefined;
+    this.stopBrowser();
     this.stopPublication();
     this.bonjour?.destroy();
     this.bonjour = undefined;
+  }
+
+  private stopBrowser(): void {
+    this.browser?.stop();
+    this.browser = undefined;
   }
 
   private stopPublication(): void {

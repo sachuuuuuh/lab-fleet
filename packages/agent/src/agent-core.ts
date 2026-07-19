@@ -5,6 +5,7 @@ import {
   AGENT_VERSION,
   JOIN_CODE_TTL_MS,
   NETWORK_PORT,
+  PROTOCOL_VERSION,
   cleanDisplayName,
   cleanUsername,
   createJoinCode,
@@ -87,8 +88,7 @@ export class AgentCore extends EventEmitter {
         return await this.createLab(input);
       case "discoverLabs":
         this.ensureStudent();
-        this.discovery.browse();
-        return await this.discovery.waitForAdvertisements(1_500);
+        return await this.discovery.scan(1_500);
       case "startPairing":
         this.requireSession(input.sessionToken);
         return this.startPairing();
@@ -225,8 +225,8 @@ export class AgentCore extends EventEmitter {
     if (this.state.membership) throw new Error("This S-node is already linked to a lab.");
     const advertisement = input.advertisement as LabAdvertisement;
     const code = String(input.code ?? "");
-    if (!advertisement?.address || !advertisement.port) throw new Error("Select a discovered lab or enter an H-node address.");
-    const requestId = await this.studentNetwork!.requestJoin(advertisement, code);
+    const target = normalizeJoinTarget(advertisement);
+    const requestId = await this.studentNetwork!.requestJoin(target, code);
     return { requestId };
   }
 
@@ -404,4 +404,23 @@ function localNetworkAddresses(): string[] {
     }
   }
   return [...addresses].sort();
+}
+
+function normalizeJoinTarget(advertisement: LabAdvertisement | undefined): LabAdvertisement {
+  if (!advertisement || typeof advertisement !== "object") {
+    throw new Error("Select a discovered lab or enter an H-node address.");
+  }
+  if (advertisement.protocolVersion !== PROTOCOL_VERSION) {
+    throw new Error("This H-node uses an incompatible Lab Fleet protocol version.");
+  }
+  const address = String(advertisement.address ?? "").trim();
+  const port = Number(advertisement.port);
+  if (!address || !Number.isInteger(port) || port < 1 || port > 65_535) {
+    throw new Error("Enter a valid H-node address and port.");
+  }
+  const fingerprint = String(advertisement.fingerprint ?? "").trim();
+  if (fingerprint && !/^[a-f0-9]{64}$/.test(fingerprint)) {
+    throw new Error("The H-node certificate fingerprint is invalid.");
+  }
+  return { ...advertisement, address, port, fingerprint };
 }

@@ -2,7 +2,7 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension" xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension">
   <Product Id="*" Name="Lab Fleet" Language="1033" Version="$(var.ProductVersion)" Manufacturer="Lab Fleet" UpgradeCode="6D9CC4D4-932A-4A7E-9D1B-4E3CE8E91419">
     <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" InstallPrivileges="elevated" Platform="x64" />
-    <MajorUpgrade DowngradeErrorMessage="A newer version of Lab Fleet is already installed." />
+    <MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="A newer version of Lab Fleet is already installed." />
     <MediaTemplate EmbedCab="yes" />
 
     <Property Id="ARPCOMMENTS" Value="Secure local network enrollment for school computer labs." />
