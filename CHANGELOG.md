@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.2 - 2026-07-19
+
+- Fixed the Ubuntu agent service so the quoted Node SEA executable can start and create `/run/lab-fleet/agent.sock`.
+- Made the Ubuntu local IPC socket accessible to the desktop UI while keeping protected commands credential-gated.
+- Improved desktop error handling for missing agent sockets, unavailable services, and expired unlock sessions.
+- Moved Ubuntu DEB production to the GitHub Actions **Build Ubuntu DEB** workflow.
+- Removed the local Docker-based Ubuntu package build path.
+
 ## 0.1.1 - 2026-07-19
 
 - Fixed the packaged Electron white screen by emitting a CommonJS sandbox preload.

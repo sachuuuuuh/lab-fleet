@@ -1,4 +1,4 @@
-name: Build installers
+name: Build Ubuntu DEB
 
 on:
   workflow_dispatch:
@@ -12,6 +12,7 @@ permissions:
 jobs:
   ubuntu-deb:
     runs-on: ubuntu-22.04
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -19,38 +20,64 @@ jobs:
           node-version: 22.23.0
           cache: npm
       - run: npm ci
+      - run: npm run typecheck
       - run: npm test
       - run: npm run package:linux
       - name: Inspect package
-        run: dpkg-deb --info release/desktop/*.deb
+        run: |
+          set -euo pipefail
+          deb="$(ls release/desktop/*.deb)"
+          dpkg-deb --info "$deb"
+          dpkg-deb --contents "$deb" | grep -E 'lab-fleet-agent|lab-fleetctl|lab-fleet-agent.service'
+          rm -rf /tmp/lab-fleet-deb
+          mkdir -p /tmp/lab-fleet-deb
+          dpkg-deb -x "$deb" /tmp/lab-fleet-deb
+          test -x "/tmp/lab-fleet-deb/opt/Lab Fleet/resources/agent/lab-fleet-agent"
+          test -x "/tmp/lab-fleet-deb/opt/Lab Fleet/resources/agent/lab-fleetctl"
+          grep -q '^ExecStart="/opt/Lab Fleet/resources/agent/lab-fleet-agent"$' "/tmp/lab-fleet-deb/opt/Lab Fleet/resources/agent/lab-fleet-agent.service"
+          grep -q 'RuntimeDirectoryMode=0755' "/tmp/lab-fleet-deb/opt/Lab Fleet/resources/agent/lab-fleet-agent.service"
+          ! grep -q 'MemoryDenyWriteExecute=true' "/tmp/lab-fleet-deb/opt/Lab Fleet/resources/agent/lab-fleet-agent.service"
+      - name: Install and smoke-test service
+        run: |
+          set -euo pipefail
+          deb="$(ls release/desktop/*.deb)"
+          sudo apt-get update
+          sudo apt-get install -y "$deb"
+          systemctl is-active --quiet lab-fleet-agent.service
+          for attempt in {1..20}; do
+            test -S /run/lab-fleet/agent.sock && break
+            sleep 0.5
+          done
+          test -S /run/lab-fleet/agent.sock
+          node <<'NODE'
+          const net = require("node:net");
+          const socket = net.createConnection("/run/lab-fleet/agent.sock");
+          let buffer = "";
+          const fail = (error) => {
+            console.error(error instanceof Error ? error.message : String(error));
+            socket.destroy();
+            process.exit(1);
+          };
+          const timer = setTimeout(() => fail(new Error("Timed out waiting for Lab Fleet agent.")), 5000);
+          socket.setEncoding("utf8");
+          socket.on("connect", () => {
+            socket.write(`${JSON.stringify({ id: "ci-status", command: "getStatus" })}\n`);
+          });
+          socket.on("data", (chunk) => {
+            buffer += chunk;
+            const newline = buffer.indexOf("\n");
+            if (newline < 0) return;
+            clearTimeout(timer);
+            const response = JSON.parse(buffer.slice(0, newline));
+            if (!response.ok) fail(new Error(response.error || "Agent status request failed."));
+            if (response.result.phase !== "unconfigured") fail(new Error(`Unexpected phase: ${response.result.phase}`));
+            socket.end();
+          });
+          socket.on("error", fail);
+          socket.on("close", () => process.exit(0));
+          NODE
       - uses: actions/upload-artifact@v4
         with:
           name: lab-fleet-ubuntu-amd64
           path: release/desktop/*.deb
-          if-no-files-found: error
-
-  windows-msi:
-    runs-on: windows-2022
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22.23.0
-          cache: npm
-      - run: npm ci
-      - run: npm test
-      - run: npm run package:windows:app
-      - name: Prepare service wrapper
-        shell: powershell
-        run: .\scripts\prepare-windows-agent.ps1
-      - name: Prepare WiX
-        shell: powershell
-        run: .\scripts\prepare-wix.ps1
-      - name: Build MSI
-        shell: powershell
-        run: .\scripts\build-windows-msi.ps1
-      - uses: actions/upload-artifact@v4
-        with:
-          name: lab-fleet-windows-x64
-          path: release/*.msi
           if-no-files-found: error

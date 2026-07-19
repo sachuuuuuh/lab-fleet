@@ -57,30 +57,24 @@ npm run package:windows:app
 ./scripts/build-windows-msi.ps1
 ```
 
-The MSI is written to `release/lab-fleet-0.1.1-x64.msi`. It includes a guided install/maintenance wizard and is unsigned unless signing credentials are supplied by the release environment. Build it once, then copy the same MSI to every Windows x64 lab computer.
+The MSI is written to `release/lab-fleet-0.1.2-x64.msi`. It includes a guided install/maintenance wizard and is unsigned unless signing credentials are supplied by the release environment. Build it locally once, then copy the same MSI to every Windows x64 lab computer.
 
-Build the Ubuntu package on Ubuntu 22.04 or in the installer CI workflow:
+Build the Ubuntu package in GitHub Actions by running the **Build Ubuntu DEB** workflow from the repository's Actions tab, or by pushing to `main` / a `v*` tag. The workflow runs on Ubuntu 22.04, builds the package natively, inspects the DEB contents, and uploads the reusable `lab-fleet-ubuntu-amd64` artifact.
+
+For maintainers on an Ubuntu build machine, the same native package command remains:
 
 ```bash
 npm run package:linux
 ```
 
-The DEB is written under `release/desktop/`.
-
-On Windows, Docker Desktop can perform the native Linux build in a Linux container. Start Docker Desktop in Linux-container mode, then run:
-
-```powershell
-npm run package:linux:docker
-```
-
-The command uses an isolated Linux `node_modules` volume and writes the resulting DEB to `release/desktop/`. Build it once, then copy that DEB to every Ubuntu amd64 lab computer; client computers do not need Node.js, npm, Docker, or the source repository.
+The DEB is written under `release/desktop/` when built on Ubuntu. For normal distribution, download the GitHub Actions artifact once and copy that DEB to every Ubuntu amd64 lab computer; client computers do not need Node.js, npm, Docker, or the source repository.
 
 ## Installation
 
 Windows:
 
 ```powershell
-msiexec /i lab-fleet-0.1.1-x64.msi
+msiexec /i lab-fleet-0.1.2-x64.msi
 ```
 
 The per-machine MSI provides a guided setup wizard, installs the desktop application, starts `LabFleetAgent` as an automatic `LocalService`, preserves `%ProgramData%\LabFleet` across normal uninstall, and opens only TCP 45820 and UDP 5353 on Domain and Private firewall profiles. Remove it through **Settings > Apps > Installed apps > Lab Fleet**, by opening the MSI again and choosing **Remove**, or from the **Uninstall Lab Fleet** Start Menu shortcut.
@@ -88,13 +82,36 @@ The per-machine MSI provides a guided setup wizard, installs the desktop applica
 Ubuntu:
 
 ```bash
-sudo apt install ./release/desktop/lab-fleet-0.1.1-amd64.deb
+sudo apt install ./lab-fleet-0.1.2-amd64.deb
 ```
 
 The package installs and starts `lab-fleet-agent.service`. Log out and back in if the installer adds the current desktop user to the `labfleet` group. When UFW blocks discovery or hosting, print the explicit rules with:
 
 ```bash
 lab-fleetctl firewall
+```
+
+If the Ubuntu app reports that it cannot connect to `/run/lab-fleet/agent.sock`, check and restart the background service:
+
+```bash
+systemctl status lab-fleet-agent.service
+sudo journalctl -u lab-fleet-agent.service -n 80 --no-pager
+sudo systemctl restart lab-fleet-agent.service
+```
+
+For early development packages that fail before creating the socket, add this local systemd override, restart the service, then reopen Lab Fleet:
+
+```bash
+sudo mkdir -p /etc/systemd/system/lab-fleet-agent.service.d
+printf '[Service]\nExecStart=\nExecStart="/opt/Lab Fleet/resources/agent/lab-fleet-agent"\nMemoryDenyWriteExecute=false\nRuntimeDirectoryMode=0755\n' | sudo tee /etc/systemd/system/lab-fleet-agent.service.d/local-fix.conf
+sudo systemctl daemon-reload
+sudo systemctl restart lab-fleet-agent.service
+```
+
+If the service is running but access is denied, add the desktop user to the local agent group and sign out and back in:
+
+```bash
+sudo usermod -aG labfleet "$USER"
 ```
 
 ## Recovery

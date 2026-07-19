@@ -35,7 +35,7 @@ export class LocalIpcServer {
         resolve();
       });
     });
-    if (process.platform !== "win32") await chmod(this.ipcPath, 0o660);
+    if (process.platform !== "win32") await chmod(this.ipcPath, 0o666);
     this.core.on("agentEvent", this.broadcast);
   }
 

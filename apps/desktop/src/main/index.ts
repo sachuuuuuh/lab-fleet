@@ -64,7 +64,13 @@ app.whenReady().then(() => {
   electronApp.setAppUserModelId("com.labfleet.desktop");
   app.on("browser-window-created", (_, window) => optimizer.watchWindowShortcuts(window));
   ipcMain.handle("lab-fleet:invoke", async (_, command: string, payload?: unknown) => {
-    return await client.invoke(command, payload);
+    try {
+      return await client.invoke(command, payload);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      writeDiagnostic(`agent-command ${command}`, message);
+      throw new Error(normalizeAgentError(message));
+    }
   });
   client.on("agentEvent", (event: AgentEvent) => mainWindow?.webContents.send("lab-fleet:event", event));
   createWindow();
@@ -78,3 +84,16 @@ app.on("window-all-closed", () => {
 });
 
 app.on("before-quit", () => client.close());
+
+function normalizeAgentError(message: string): string {
+  if (message.includes("ENOENT") && message.includes("lab-fleet")) {
+    return "The Lab Fleet agent is not running. Start the Lab Fleet Agent service and try again.";
+  }
+  if (message.includes("ECONNREFUSED") || message.includes("EPIPE") || message.includes("disconnected")) {
+    return "The Lab Fleet agent is unavailable. Restart the Lab Fleet Agent service and try again.";
+  }
+  if (message.includes("EACCES") || message.includes("permission denied")) {
+    return "This user cannot access the Lab Fleet agent. Check the local service permissions and sign in again.";
+  }
+  return message;
+}

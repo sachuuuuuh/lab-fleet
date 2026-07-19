@@ -17,7 +17,7 @@ After building the Windows application directory, verify the actual Electron pac
 npm run smoke:windows-package
 ```
 
-`npm run package:linux:docker` was exercised on Windows with Docker Desktop and produced `release/desktop/lab-fleet-0.1.1-amd64.deb`. Its control archive was inspected with `dpkg-deb --info` inside the Linux container. This does not replace installation and reboot testing on actual Ubuntu 22.04 and 24.04 systems.
+The **Build Ubuntu DEB** GitHub Actions workflow is the supported way to produce Ubuntu packages. It runs on `ubuntu-22.04`, performs typecheck and tests, builds the DEB natively, checks that the agent, control utility, and systemd service are present, verifies the fixed runtime directory mode, and rejects packages that still contain `MemoryDenyWriteExecute=true`. This does not replace installation and reboot testing on actual Ubuntu 22.04 and 24.04 systems.
 
 Current automated scenarios:
 
@@ -44,7 +44,7 @@ Windows CI must:
 
 Ubuntu CI or a clean VM must:
 
-1. Build the DEB on Ubuntu 22.04.
+1. Build the DEB through GitHub Actions on Ubuntu 22.04.
 2. Inspect it with `dpkg-deb --info`.
 3. Install on Ubuntu 22.04 and 24.04.
 4. Confirm `lab-fleet-agent.service` runs as `labfleet` and starts after reboot.

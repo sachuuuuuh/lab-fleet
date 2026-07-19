@@ -73,6 +73,7 @@ export default function App(): ReactNode {
       setNodes(nextNodes);
       setPending(nextPending);
     } catch (requestError) {
+      if (isUnlockRequiredError(requestError)) setSessionToken("");
       setError(messageOf(requestError));
     }
   }, [sessionToken]);
@@ -107,6 +108,7 @@ export default function App(): ReactNode {
     try {
       return await operation();
     } catch (requestError) {
+      if (isUnlockRequiredError(requestError)) setSessionToken("");
       setError(messageOf(requestError));
       return undefined;
     } finally {
@@ -558,5 +560,13 @@ function formatRelative(value: string): string {
 }
 
 function messageOf(error: unknown, fallback = "The request could not be completed."): string {
-  return error instanceof Error ? error.message : fallback;
+  const message = error instanceof Error ? error.message : fallback;
+  return message
+    .replace(/^Error invoking remote method 'lab-fleet:invoke': Error:\s*/i, "")
+    .replace(/^Error invoking remote method "lab-fleet:invoke": Error:\s*/i, "")
+    .trim();
+}
+
+function isUnlockRequiredError(error: unknown): boolean {
+  return messageOf(error) === "Unlock Lab Fleet to continue.";
 }

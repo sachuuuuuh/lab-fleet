@@ -1,6 +1,6 @@
 {
   "name": "lab-fleet",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "description": "Cross-platform local network management for school computer labs",
   "license": "MIT",
@@ -12,7 +12,6 @@
     "build": "npm run build -w @lab-fleet/shared && npm run build -w @lab-fleet/agent && npm run build -w @lab-fleet/desktop",
     "build:agent-binaries": "node scripts/build-agent-sea.mjs",
     "package:linux": "npm run build && npm run build:agent-binaries && npm run package:linux -w @lab-fleet/desktop",
-    "package:linux:docker": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-linux-deb-docker.ps1",
     "package:windows:app": "npm run build && npm run build:agent-binaries && npm run package:windows:app -w @lab-fleet/desktop",
     "smoke:windows-package": "node scripts/smoke-windows-package.mjs",
     "dev": "npm run build -w @lab-fleet/shared && concurrently -k -n agent,desktop -c cyan,green \"npm run dev -w @lab-fleet/agent\" \"npm run dev -w @lab-fleet/desktop\"",
